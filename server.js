@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
+app.get(PORT, async () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   await checkDatabaseConnection();
 });
