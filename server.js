@@ -28,23 +28,28 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashRoutes);
 
-
 app.get("/", (req, res) => {
-    res.send("Mail API is running...");
+  res.send("Mail API is running...");
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
   });
 
-  async function checkDatabaseConnection() {
-    try {
-      await prisma.$connect();
-      console.log("✅ Database connected!");
-    } catch (error) {
-      console.error("❌ Database connection failed!", error);
-    }
+async function checkDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Database connected!");
+  } catch (error) {
+    console.error("❌ Database connection failed!", error);
+    process.exit(1); // Exit if DB connection fails
   }
+}
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.get(PORT, async () => {
+app.listen(PORT, async () => {  // Changed from app.get to app.listen
   console.log(`🚀 Server is running on port ${PORT}`);
   await checkDatabaseConnection();
 });
