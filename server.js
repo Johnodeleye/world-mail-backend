@@ -3,13 +3,12 @@ const express = require("express");
 const cors = require("cors");
 const emailRoutes = require('./routes/email.routes');
 const userRoutes = require('./routes/user.routes');
-const { PrismaClient } = require("@prisma/client");
 const authRoutes = require('./routes/auth.routes');
 const dashRoutes = require('./routes/dashboard.routes');
-const app = express();
-const prisma = new PrismaClient();
+const prisma = require('./lib/prismaClient'); // ✅ updated to singleton
 
-// CORS setup
+const app = express();
+
 const corsOptions = {
   origin: [
     'https://rtmail.vercel.app',
@@ -19,14 +18,12 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  // Add this for SSE support
   exposedHeaders: ['Content-Type', 'Content-Length', 'Cache-Control', 'Last-Event-ID']
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Routes
 app.use('/api/email', emailRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -37,9 +34,9 @@ app.get("/", (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
-  });
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 async function checkDatabaseConnection() {
   try {
@@ -47,15 +44,12 @@ async function checkDatabaseConnection() {
     console.log("✅ Database connected!");
   } catch (error) {
     console.error("❌ Database connection failed!", error);
-    process.exit(1); // Exit if DB connection fails
+    process.exit(1);
   }
 }
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   await checkDatabaseConnection();
 });
-
-module.exports = app;
