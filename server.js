@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 // CORS setup
 const corsOptions = {
   origin: [
-    'https://your-production-domain.com',
+    'https://rtmail.vercel.app',
     'https://office-365-sable.vercel.app',
     'http://localhost:3000'
   ],
