@@ -175,10 +175,89 @@ const deleteEmail = async (req, res) => {
       await prisma.$disconnect();
     }
   };
+
+  // email.controllers.js
+const updateEmailCredentials = async (req, res) => {
+  try {
+    const { emailUser, emailPass } = req.body;
+
+    if (!emailUser || !emailPass) {
+      return res.status(400).json({
+        success: false,
+        message: "Email user and password are required"
+      });
+    }
+
+    // Check if settings already exist
+    const existingSettings = await prisma.emailSettings.findFirst();
+
+    let settings;
+    if (existingSettings) {
+      // Update existing
+      settings = await prisma.emailSettings.update({
+        where: { id: existingSettings.id },
+        data: { emailUser, emailPass }
+      });
+    } else {
+      // Create new
+      settings = await prisma.emailSettings.create({
+        data: { emailUser, emailPass }
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Email credentials updated successfully",
+      settings: {
+        id: settings.id,
+        emailUser: settings.emailUser,
+        updatedAt: settings.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error("Error updating email credentials:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update email credentials",
+      error: error.message
+    });
+  }
+};
+
+const getEmailCredentials = async (req, res) => {
+  try {
+    const settings = await prisma.emailSettings.findFirst();
+    
+    if (!settings) {
+      return res.status(404).json({
+        success: false,
+        message: "Email credentials not configured"
+      });
+    }
+
+    return res.json({
+      success: true,
+      settings: {
+        id: settings.id,
+        emailUser: settings.emailUser,
+        updatedAt: settings.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error("Error getting email credentials:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get email credentials",
+      error: error.message
+    });
+  }
+};
   
   module.exports = { 
     sendEmail,
     getEmailHistory,
     deleteEmail,
-    permanentDeleteEmail 
+    permanentDeleteEmail,
+    updateEmailCredentials,
+    getEmailCredentials
   };

@@ -1,21 +1,30 @@
 const nodemailer = require('nodemailer');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = {}) => {
-    try {
-      let transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: true
-        }
-      });
-  
+  try {
+    // Get credentials from database
+    const emailSettings = await prisma.emailSettings.findFirst();
+    
+    if (!emailSettings) {
+      throw new Error('Email credentials not configured in database');
+    }
+
+    let transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: emailSettings.emailUser,
+        pass: emailSettings.emailPass,
+      },
+      tls: {
+        rejectUnauthorized: true
+      }
+    });
+
       // Convert body text to HTML with line breaks
       const htmlBody = body.replace(/\n/g, '<br>');
       
@@ -171,7 +180,9 @@ const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = 
     } catch (error) {
       console.error("Email sending error:", error);
       return { success: false, error: error.message };
+    } finally {
+      await prisma.$disconnect();
     }
-  };
+};
 
 module.exports = { sendCustomEmail };

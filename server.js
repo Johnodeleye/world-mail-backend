@@ -11,30 +11,16 @@ const prisma = new PrismaClient();
 
 // CORS setup
 const corsOptions = {
-  origin: (origin, callback) => {
-    // List of allowed origins
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'http://localhost:3000',
-      'https://office-365-sable.vercel.app'
-    ];
-
-    // In development, allow all origins for easier testing
-    if (process.env.NODE_ENV === 'development') {
-      return callback(null, true);
-    }
-
-    // Check if the origin is in the allowed list
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // If not allowed
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: [
+    'https://your-production-domain.com',
+    'https://office-365-sable.vercel.app',
+    'http://localhost:3000'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  // Add this for SSE support
+  exposedHeaders: ['Content-Type', 'Content-Length', 'Cache-Control', 'Last-Event-ID']
 };
 
 app.use(cors(corsOptions));
