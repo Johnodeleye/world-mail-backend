@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = {}) => {
+const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = {}, bcc = []) => {
   try {
     // Get credentials from database
     const emailSettings = await prisma.emailSettings.findFirst();
@@ -25,8 +25,9 @@ const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = 
       }
     });
 
-      // Convert body text to HTML with line breaks
-      const htmlBody = body.replace(/\n/g, '<br>');
+    // Ensure body is a string
+    const emailBody = typeof body === 'string' ? body : JSON.stringify(body);
+    const htmlBody = emailBody.replace(/\n/g, '<br>');
       
       // Generate CTA buttons
       let ctaButtons = '';
@@ -164,10 +165,10 @@ const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = 
       let info = await transporter.sendMail({
         from: `"${senderInfo.name || 'RT New World'}" <${from}>`,
         to: Array.isArray(to) ? to.join(', ') : to,
+        bcc: Array.isArray(bcc) && bcc.length > 0 ? bcc.join(', ') : undefined,
         subject: subject,
         html: htmlContent,
         text: textContent,
-        // Add headers to improve deliverability
         headers: {
           'List-Unsubscribe': '<mailto:unsubscribe@rtnewworld.com>, <https://www.rtnewworld.com/unsubscribe>',
           'X-Mailer': 'RT New World Mail Service',

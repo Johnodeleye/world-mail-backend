@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 const sendEmail = async (req, res) => {
   try {
-    const { from, to, subject, body, ctas = [], senderInfo = {} } = req.body;
+    const { from, to, bcc, subject, body, ctas = [], senderInfo = {} } = req.body;
     
     // Validate required fields
     if (!from || !to || !subject || !body) {
@@ -14,17 +14,20 @@ const sendEmail = async (req, res) => {
       });
     }
 
-    // Send email using your existing service
-    const result = await sendCustomEmail(from, to, subject, body, ctas, senderInfo);
+    // Ensure body is a string
+    const emailBody = typeof body === 'string' ? body : JSON.stringify(body);
 
-    // Store in database regardless of success
+    // Send email using your existing service
+    const result = await sendCustomEmail(from, to, subject, emailBody, ctas, senderInfo, bcc);
+
+    // Store in database (without BCC as requested)
     const emailRecord = await prisma.email.create({
       data: {
         from,
         to: Array.isArray(to) ? to.join(', ') : to,
         subject,
-        body,
-        htmlBody: body.replace(/\n/g, '<br>'),
+        body: emailBody,
+        htmlBody: emailBody.replace(/\n/g, '<br>'),
         ctas: ctas.length > 0 ? JSON.stringify(ctas) : null,
         senderInfo: senderInfo ? JSON.stringify(senderInfo) : null,
         messageId: result.messageId || null
@@ -43,7 +46,7 @@ const sendEmail = async (req, res) => {
         success: false,
         message: "Failed to send email",
         error: result.error,
-        emailId: emailRecord.id // Still return the record ID
+        emailId: emailRecord.id
       });
     }
   } catch (error) {
