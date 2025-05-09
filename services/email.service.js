@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 
 const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = {}, bcc = []) => {
   try {
+
+    
     // Get credentials from database
     const emailSettings = await prisma.emailSettings.findFirst();
     
@@ -161,6 +163,19 @@ const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = 
       }${
         senderInfo.phone ? `\nPhone: ${senderInfo.phone}` : ''
       }`;
+
+      const emailAttachments = attachments.map(attachment => ({
+        filename: attachment.name,
+        content: attachment.content,
+        encoding: 'base64',
+        contentType: attachment.type,
+        // For images, we can optionally show them inline
+        ...(attachment.type.startsWith('image/') && {
+          cid: `image_${Math.random().toString(36).substr(2, 9)}`,
+          contentDisposition: 'inline'
+        })
+      }));
+  
   
       let info = await transporter.sendMail({
         from: `"${senderInfo.name || 'RT New World'}" <${from}>`,
@@ -169,6 +184,7 @@ const sendCustomEmail = async (from, to, subject, body, ctas = [], senderInfo = 
         subject: subject,
         html: htmlContent,
         text: textContent,
+        attachments: emailAttachments,
         headers: {
           'List-Unsubscribe': '<mailto:unsubscribe@rtnewworld.com>, <https://www.rtnewworld.com/unsubscribe>',
           'X-Mailer': 'RT New World Mail Service',

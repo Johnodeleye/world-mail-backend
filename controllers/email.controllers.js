@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 const sendEmail = async (req, res) => {
   try {
-    const { from, to, bcc, subject, body, ctas = [], senderInfo = {} } = req.body;
+    const { from, to, bcc, subject, body, ctas = [], senderInfo = {}, attachments = [] } = req.body;
     
     // Validate required fields
     if (!from || !to || !subject || !body) {
@@ -18,7 +18,7 @@ const sendEmail = async (req, res) => {
     const emailBody = typeof body === 'string' ? body : JSON.stringify(body);
 
     // Send email using your existing service
-    const result = await sendCustomEmail(from, to, subject, emailBody, ctas, senderInfo, bcc);
+    const result = await sendCustomEmail(from, to, subject, emailBody, ctas, senderInfo, bcc, attachments);
 
     // Store in database (without BCC as requested)
     const emailRecord = await prisma.email.create({

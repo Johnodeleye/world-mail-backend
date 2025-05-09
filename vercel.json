@@ -16,3 +16,6 @@
       "DATABASE_URL": "postgresql://maildb_owner:npg_EVJ2bCD5vfKM@ep-bold-sound-a27wurtj-pooler.eu-central-1.aws.neon.tech/maildb?sslmode=require"
     }
   }
+
+
+  
