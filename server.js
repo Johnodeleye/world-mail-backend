@@ -9,6 +9,10 @@ const dashRoutes = require('./routes/dashboard.routes');
 const app = express();
 const prisma = new PrismaClient();
 
+app.use(express.json({ limit: '25mb' })); // For JSON data
+app.use(express.urlencoded({ limit: '25mb', extended: true })); // For form data
+
+
 // CORS setup
 const corsOptions = {
   origin: [
